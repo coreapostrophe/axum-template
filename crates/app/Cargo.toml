@@ -1,8 +1,16 @@
 [package]
-name = "app"
+name = "axum_app"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
+
+[lib]
+name = "axum_applib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "axum_app"
+path = "src/main.rs"
 
 [dependencies]
 axum = "0.8.9"
@@ -10,4 +18,15 @@ tokio = { version = "1.52.1", features = ["macros", "rt-multi-thread"] }
 config = { version = "0.15", default-features = false, features = ["yaml"] }
 serde = { version = "1.0", features = ["derive"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+tracing-subscriber = { version = "0.3.23", features = [
+    "env-filter",
+    "fmt",
+    "json",
+] }
+
+[dev-dependencies]
+reqwest = { version = "0.13.2", default-features = false, features = [
+    "json",
+    "rustls",
+] }
+tokio = { version = "1.52.1", features = ["macros", "rt-multi-thread", "time"] }

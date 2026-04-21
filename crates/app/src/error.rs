@@ -20,7 +20,6 @@ where
 #[derive(Debug, Clone, Copy)]
 pub enum AppErrorKind {
     Config,
-    AddressParse,
     Bind,
     Serve,
 }
@@ -29,7 +28,6 @@ impl fmt::Display for AppErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let message = match self {
             Self::Config => "failed to load application configuration",
-            Self::AddressParse => "invalid bind address",
             Self::Bind => "failed to bind TCP listener",
             Self::Serve => "HTTP server terminated unexpectedly",
         };

@@ -1,5 +1,4 @@
-use std::net::SocketAddr;
-
+use tokio::net::TcpListener;
 use tracing::info;
 
 use crate::{
@@ -8,21 +7,31 @@ use crate::{
     routes,
 };
 
-pub async fn run(config: &AppConfig) -> AppResult<()> {
-    let app = routes::router();
-    let addr: SocketAddr = config
-        .bind_address()
-        .parse()
-        .app_err(AppErrorKind::AddressParse)?;
-    let listener = tokio::net::TcpListener::bind(addr)
-        .await
-        .app_err(AppErrorKind::Bind)?;
+pub struct Server;
 
-    info!(address = %addr, "listening");
+impl Server {
+    pub async fn run(config: &AppConfig) -> AppResult<()> {
+        let listener = TcpListener::bind((config.host.as_str(), config.port))
+            .await
+            .app_err(AppErrorKind::Bind)?;
 
-    axum::serve(listener, app)
-        .await
-        .app_err(AppErrorKind::Serve)?;
+        if let Ok(address) = listener.local_addr() {
+            info!(
+                requested_host = %config.host,
+                requested_port = config.port,
+                address = %address,
+                "listening"
+            );
+        }
 
-    Ok(())
+        Self::run_with_listener(listener).await
+    }
+
+    pub async fn run_with_listener(listener: TcpListener) -> AppResult<()> {
+        let app = routes::router();
+
+        axum::serve(listener, app)
+            .await
+            .app_err(AppErrorKind::Serve)
+    }
 }
