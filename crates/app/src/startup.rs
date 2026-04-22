@@ -3,8 +3,8 @@ use tracing::info;
 
 use crate::{
     config::AppConfig,
+    domains,
     error::{AppErrorKind, AppResult, ResultExt},
-    routes,
 };
 
 pub struct Server;
@@ -28,7 +28,7 @@ impl Server {
     }
 
     pub async fn run_with_listener(listener: TcpListener) -> AppResult<()> {
-        let app = routes::router();
+        let app = domains::router();
 
         axum::serve(listener, app)
             .await
