@@ -17,9 +17,8 @@ pub struct ConfigSource {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct AppConfig {
-    pub host: String,
-    pub port: u16,
+pub struct ServerConfig {
+    pub api: ApiConfig,
     #[serde(default)]
     pub logging: LoggingConfig,
 }
@@ -30,8 +29,14 @@ pub struct LoggingConfig {
     pub human_readable: bool,
 }
 
-impl AppConfig {
-    pub fn load() -> AppResult<(Self, ConfigSource)> {
+#[derive(Debug, Clone, Deserialize, Default)]
+pub struct ApiConfig {
+    pub host: String,
+    pub port: u16,
+}
+
+impl ServerConfig {
+    pub fn get() -> AppResult<(Self, ConfigSource)> {
         let (config_path, config_file_from_env) = match env::var("APP_CONFIG_FILE") {
             Ok(path) => (path, true),
             Err(_) => (DEFAULT_CONFIG_PATH.to_owned(), false),
@@ -44,9 +49,9 @@ impl AppConfig {
         };
 
         let cfg = ConfigBuilder::builder()
-            .set_default("host", DEFAULT_HOST)
+            .set_default("api.host", DEFAULT_HOST)
             .app_err(AppErrorKind::Config)?
-            .set_default("port", DEFAULT_PORT)
+            .set_default("api.port", DEFAULT_PORT)
             .app_err(AppErrorKind::Config)?
             .set_default("logging.human_readable", false)
             .app_err(AppErrorKind::Config)?

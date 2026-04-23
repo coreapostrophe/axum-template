@@ -2,32 +2,52 @@ use tokio::net::TcpListener;
 use tracing::info;
 
 use crate::{
-    config::AppConfig,
     domains,
     error::{AppErrorKind, AppResult, ResultExt},
 };
 
+pub enum BindOption<'a> {
+    SocketAddressString(&'a str),
+    SocketAddress((&'a str, u16)),
+    Listener(TcpListener),
+}
+
+impl<'a> From<&'a str> for BindOption<'a> {
+    fn from(value: &'a str) -> Self {
+        Self::SocketAddressString(value)
+    }
+}
+
+impl<'a> From<(&'a str, u16)> for BindOption<'a> {
+    fn from(value: (&'a str, u16)) -> Self {
+        Self::SocketAddress(value)
+    }
+}
+
+impl From<TcpListener> for BindOption<'_> {
+    fn from(value: TcpListener) -> Self {
+        Self::Listener(value)
+    }
+}
+
 pub struct Server;
 
 impl Server {
-    pub async fn run(config: &AppConfig) -> AppResult<()> {
-        let listener = TcpListener::bind((config.host.as_str(), config.port))
-            .await
-            .app_err(AppErrorKind::Bind)?;
+    pub async fn run<'a>(bind: impl Into<BindOption<'a>>) -> AppResult<()> {
+        let listener = match bind.into() {
+            BindOption::SocketAddressString(address) => TcpListener::bind(address)
+                .await
+                .app_err(AppErrorKind::Bind)?,
+            BindOption::SocketAddress((host, port)) => TcpListener::bind((host, port))
+                .await
+                .app_err(AppErrorKind::Bind)?,
+            BindOption::Listener(listener) => listener,
+        };
 
         if let Ok(address) = listener.local_addr() {
-            info!(
-                requested_host = %config.host,
-                requested_port = config.port,
-                address = %address,
-                "listening"
-            );
+            info!(address = %address, "listening");
         }
 
-        Self::run_with_listener(listener).await
-    }
-
-    pub async fn run_with_listener(listener: TcpListener) -> AppResult<()> {
         let app = domains::router();
 
         axum::serve(listener, app)

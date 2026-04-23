@@ -32,7 +32,7 @@ pub async fn spawn_app() -> TestApp {
         .port();
 
     tokio::spawn(async move {
-        Server::run_with_listener(listener)
+        Server::run(listener)
             .await
             .unwrap_or_else(|error| panic!("test server crashed: {error}"));
     });

@@ -1,8 +1,8 @@
-use axum_applib::{config::AppConfig, error::AppResult, observability, startup::Server};
+use axum_applib::{config::ServerConfig, error::AppResult, observability, startup::Server};
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
-    let (config, config_source) = match AppConfig::load() {
+    let (config, config_source) = match ServerConfig::get() {
         Ok(config) => config,
         Err(error) => {
             observability::init_tracing(false);
@@ -20,7 +20,7 @@ async fn main() -> AppResult<()> {
         "configuration loaded"
     );
 
-    if let Err(error) = Server::run(&config).await {
+    if let Err(error) = Server::run((config.api.host.as_str(), config.api.port)).await {
         error.log_debug();
         return Err(error);
     }
