@@ -1,6 +1,6 @@
 use axum::{
-    http::{header::LOCATION, HeaderValue},
     http::StatusCode,
+    http::{header::LOCATION, HeaderValue},
     response::{IntoResponse, Response},
     Json,
 };
