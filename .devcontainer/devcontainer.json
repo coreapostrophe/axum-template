@@ -1,19 +1,17 @@
 {
   "name": "Axum Template",
-  "runArgs": [
-    "--name",
-    "axum-template"
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "runServices": [
+    "postgres"
   ],
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
+  "shutdownAction": "stopCompose",
+  "overrideCommand": false,
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "containerEnv": {
-    "CARGO_TARGET_DIR": "/home/vscode/.cache/axum-template/target"
-  },
+  "forwardPorts": [5432],
   "postCreateCommand": "bash .devcontainer/setup.sh",
   "customizations": {
     "vscode": {

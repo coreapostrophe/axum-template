@@ -1,6 +1,8 @@
 use std::time::Duration;
 
-use axum_applib::startup::Server;
+use axum_applib::server::Server;
+use serde::Serialize;
+use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 
 pub struct TestApp {
@@ -8,10 +10,45 @@ pub struct TestApp {
     pub client: reqwest::Client,
 }
 
+#[allow(dead_code)]
 impl TestApp {
     pub async fn get(&self, path: &str) -> reqwest::Response {
         self.client
             .get(self.url(path))
+            .send()
+            .await
+            .unwrap_or_else(|error| panic!("request failed for {path}: {error}"))
+    }
+
+    pub async fn post_json<T: Serialize + ?Sized>(
+        &self,
+        path: &str,
+        body: &T,
+    ) -> reqwest::Response {
+        self.client
+            .post(self.url(path))
+            .json(body)
+            .send()
+            .await
+            .unwrap_or_else(|error| panic!("request failed for {path}: {error}"))
+    }
+
+    pub async fn patch_json<T: Serialize + ?Sized>(
+        &self,
+        path: &str,
+        body: &T,
+    ) -> reqwest::Response {
+        self.client
+            .patch(self.url(path))
+            .json(body)
+            .send()
+            .await
+            .unwrap_or_else(|error| panic!("request failed for {path}: {error}"))
+    }
+
+    pub async fn delete(&self, path: &str) -> reqwest::Response {
+        self.client
+            .delete(self.url(path))
             .send()
             .await
             .unwrap_or_else(|error| panic!("request failed for {path}: {error}"))
@@ -30,9 +67,13 @@ pub async fn spawn_app() -> TestApp {
         .local_addr()
         .expect("failed to read local address")
         .port();
+    let pg_pool = PgPoolOptions::new()
+        .max_connections(1)
+        .connect_lazy("postgres://postgres:postgres@127.0.0.1:5432/postgres")
+        .expect("failed to build lazy postgres pool for tests");
 
     tokio::spawn(async move {
-        Server::run(listener)
+        Server::run(listener, pg_pool)
             .await
             .unwrap_or_else(|error| panic!("test server crashed: {error}"));
     });

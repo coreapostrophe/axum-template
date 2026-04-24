@@ -20,6 +20,9 @@ where
 #[derive(Debug, Clone, Copy)]
 pub enum AppErrorKind {
     Config,
+    DbPool,
+    Migration,
+    Database,
     Bind,
     Serve,
 }
@@ -28,6 +31,9 @@ impl fmt::Display for AppErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let message = match self {
             Self::Config => "failed to load application configuration",
+            Self::DbPool => "failed to initialize postgres connection pool",
+            Self::Migration => "failed to run database migrations",
+            Self::Database => "database operation failed",
             Self::Bind => "failed to bind TCP listener",
             Self::Serve => "HTTP server terminated unexpectedly",
         };

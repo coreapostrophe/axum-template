@@ -1,4 +1,4 @@
-use axum_applib::{config::ServerConfig, error::AppResult, observability, startup::Server};
+use axum_applib::{config::ServerConfig, error::AppResult, observability, server::Server};
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
@@ -20,7 +20,26 @@ async fn main() -> AppResult<()> {
         "configuration loaded"
     );
 
-    if let Err(error) = Server::run((config.api.host.as_str(), config.api.port)).await {
+    let pg_pool = match config.postgres.pg_pool() {
+        Ok(pool) => pool,
+        Err(error) => {
+            error.log_debug();
+            return Err(error);
+        }
+    };
+
+    if config.postgres.run_migrations {
+        if let Err(error) = sqlx::migrate!("./migrations").run(&pg_pool).await {
+            let app_error = axum_applib::error::AppError::from_source(
+                axum_applib::error::AppErrorKind::Migration,
+                error,
+            );
+            app_error.log_debug();
+            return Err(app_error);
+        }
+    }
+
+    if let Err(error) = Server::run((config.api.host.as_str(), config.api.port), pg_pool).await {
         error.log_debug();
         return Err(error);
     }

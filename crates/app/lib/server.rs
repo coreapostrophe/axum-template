@@ -1,8 +1,9 @@
+use sqlx::PgPool;
 use tokio::net::TcpListener;
 use tracing::info;
 
 use crate::{
-    domains,
+    api,
     error::{AppErrorKind, AppResult, ResultExt},
 };
 
@@ -33,7 +34,7 @@ impl From<TcpListener> for BindOption<'_> {
 pub struct Server;
 
 impl Server {
-    pub async fn run<'a>(bind: impl Into<BindOption<'a>>) -> AppResult<()> {
+    pub async fn run<'a>(bind: impl Into<BindOption<'a>>, pg_pool: PgPool) -> AppResult<()> {
         let listener = match bind.into() {
             BindOption::SocketAddressString(address) => TcpListener::bind(address)
                 .await
@@ -48,7 +49,7 @@ impl Server {
             info!(address = %address, "listening");
         }
 
-        let app = domains::router();
+        let app = api::routes::create_router(pg_pool);
 
         axum::serve(listener, app)
             .await
