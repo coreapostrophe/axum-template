@@ -7,6 +7,10 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -19,12 +23,17 @@ env:
   APP_POSTGRES__USER: "postgres"
   APP_POSTGRES__PASSWORD: "postgres"
   APP_POSTGRES__DB_NAME: "app"
+  APP_POSTGRES__MAINTENANCE_DB: "postgres"
+  APP_API__CORS_ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+  SQLX_CLI_VERSION: "0.8.6"
 
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
+      fail-fast: false
       matrix:
         rust: [1.95.0, stable]
     services:
@@ -45,16 +54,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
           components: rustfmt, clippy
       - name: Cache Rust dependencies
         uses: swatinem/rust-cache@v2
       - name: Install sqlx-cli
-        run: cargo install sqlx-cli --no-default-features --features rustls,postgres --locked
+        run: cargo install sqlx-cli --version ${SQLX_CLI_VERSION} --no-default-features --features rustls,postgres --locked
       - name: Run database migrations
         run: bash scripts/migrate.sh
+      - name: Verify SQLx offline metadata
+        if: matrix.rust == 'stable'
+        run: bash scripts/prepare_sqlx.sh --check
       - name: Check formatting
         run: cargo fmt --all -- --check
       - name: Run clippy
@@ -64,4 +76,5 @@ jobs:
       - name: Build all packages
         run: cargo build --all-targets --all-features
       - name: Build release
+        if: matrix.rust == 'stable'
         run: cargo build --release --all-targets --all-features

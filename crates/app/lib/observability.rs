@@ -6,14 +6,14 @@ pub fn init_tracing(human_readable: bool) {
     let fmt_layer = tracing_subscriber::fmt::layer();
 
     if human_readable {
-        tracing_subscriber::registry()
+        let _ = tracing_subscriber::registry()
             .with(filter)
             .with(fmt_layer)
-            .init();
+            .try_init();
     } else {
-        tracing_subscriber::registry()
+        let _ = tracing_subscriber::registry()
             .with(filter)
             .with(fmt_layer.json())
-            .init();
+            .try_init();
     }
 }

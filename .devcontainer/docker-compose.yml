@@ -16,7 +16,9 @@ services:
       APP_POSTGRES__USER: postgres
       APP_POSTGRES__PASSWORD: postgres
       APP_POSTGRES__DB_NAME: app
+      APP_POSTGRES__MAINTENANCE_DB: postgres
       APP_POSTGRES__RUN_MIGRATIONS: "true"
+      APP_API__CORS_ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped

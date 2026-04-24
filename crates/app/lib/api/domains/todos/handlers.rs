@@ -7,8 +7,8 @@ use axum::{
 use uuid::Uuid;
 
 use crate::api::utils::response::{
-    data::ApiDataResponse,
-    error::{ApiResult, MapApiError},
+    data::{ApiCreatedResponse, ApiDataResponse},
+    error::{ApiError, ApiResult, MapApiError},
 };
 
 use super::{
@@ -19,9 +19,15 @@ use super::{
 pub async fn create_todo(
     State(todos_service): State<Arc<TodosService>>,
     Json(payload): Json<TodoCreateInput>,
-) -> ApiResult<ApiDataResponse<super::models::Todo>> {
+) -> ApiResult<ApiCreatedResponse<super::models::Todo>> {
+    let payload = payload
+        .normalize_and_validate()
+        .map_err(|message| ApiError::BadRequest(message.to_owned()))?;
+
     let todo = todos_service.create_todo(payload).await.map_api_err()?;
-    Ok(ApiDataResponse::ok(todo))
+    let location = format!("/api/todos/{}", todo.id);
+
+    Ok(ApiCreatedResponse::new(todo, Some(location)))
 }
 
 pub async fn list_todos(
@@ -47,6 +53,10 @@ pub async fn update_todo(
     Path(todo_id): Path<Uuid>,
     Json(payload): Json<TodoUpdateInput>,
 ) -> ApiResult<ApiDataResponse<super::models::Todo>> {
+    let payload = payload
+        .normalize_and_validate()
+        .map_err(|message| ApiError::BadRequest(message.to_owned()))?;
+
     let todo = todos_service
         .update_todo(todo_id, payload)
         .await

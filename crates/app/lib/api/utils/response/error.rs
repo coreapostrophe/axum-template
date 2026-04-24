@@ -3,7 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::error::AppError;
@@ -20,18 +20,19 @@ pub enum ApiError {
     Internal,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ApiErrorResponse {
-    status: &'static str,
-    code: &'static str,
-    message: String,
+    pub status: String,
+    pub code: String,
+    pub message: String,
 }
 
 impl ApiErrorResponse {
-    pub fn new(code: &'static str, message: impl Into<String>) -> Self {
+    pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
-            status: "error",
-            code,
+            status: "error".to_owned(),
+            code: code.into(),
             message: message.into(),
         }
     }
