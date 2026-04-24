@@ -20,14 +20,6 @@ struct Todo {
 
 #[tokio::test]
 async fn todos_crud_flow_works() {
-    if std::env::var("APP_POSTGRES__RUN_MIGRATIONS")
-        .map(|value| value != "true")
-        .unwrap_or(true)
-    {
-        eprintln!("skipping todos_crud_flow_works: set APP_POSTGRES__RUN_MIGRATIONS=true with a reachable database");
-        return;
-    }
-
     let app = spawn_app().await;
 
     let create_response = app
