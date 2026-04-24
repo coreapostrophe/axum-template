@@ -69,7 +69,7 @@ pub async fn spawn_app() -> TestApp {
         .port();
     let pg_pool = PgPoolOptions::new()
         .max_connections(1)
-        .connect_lazy("postgres://postgres:postgres@127.0.0.1:5432/postgres")
+        .connect_lazy(&test_database_url())
         .expect("failed to build lazy postgres pool for tests");
 
     tokio::spawn(async move {
@@ -88,6 +88,20 @@ pub async fn spawn_app() -> TestApp {
 
     wait_until_ready(&test_app).await;
     test_app
+}
+
+fn test_database_url() -> String {
+    let host = std::env::var("APP_POSTGRES__HOST").unwrap_or_else(|_| "127.0.0.1".to_owned());
+    let port = std::env::var("APP_POSTGRES__PORT").unwrap_or_else(|_| "5432".to_owned());
+    let user = std::env::var("APP_POSTGRES__USER").unwrap_or_else(|_| "postgres".to_owned());
+    let password =
+        std::env::var("APP_POSTGRES__PASSWORD").unwrap_or_else(|_| "postgres".to_owned());
+    let db_name = std::env::var("APP_POSTGRES__DB_NAME").unwrap_or_else(|_| "app".to_owned());
+
+    format!(
+        "postgres://{}:{}@{}:{}/{}",
+        user, password, host, port, db_name
+    )
 }
 
 async fn wait_until_ready(app: &TestApp) {

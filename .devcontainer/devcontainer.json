@@ -3,6 +3,7 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   "runServices": [
+    "devcontainer",
     "postgres"
   ],
   "shutdownAction": "stopCompose",
@@ -32,5 +33,5 @@
     }
   },
   "remoteUser": "vscode",
-  "workspaceFolder": "/workspaces/axum-template"
+  "workspaceFolder": "/workspace"
 }

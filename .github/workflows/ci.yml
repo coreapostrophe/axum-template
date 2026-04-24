@@ -14,6 +14,11 @@ env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
   APP_POSTGRES__RUN_MIGRATIONS: "true"
+  APP_POSTGRES__HOST: "127.0.0.1"
+  APP_POSTGRES__PORT: "5432"
+  APP_POSTGRES__USER: "postgres"
+  APP_POSTGRES__PASSWORD: "postgres"
+  APP_POSTGRES__DB_NAME: "app"
 
 jobs:
   test:
@@ -26,13 +31,13 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_DB: postgres
+          POSTGRES_DB: app
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-cmd "pg_isready -U postgres -d app"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -46,12 +51,10 @@ jobs:
           components: rustfmt, clippy
       - name: Cache Rust dependencies
         uses: swatinem/rust-cache@v2
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-      - name: Run database migrations for integration tests
-        env:
-          PGPASSWORD: postgres
-        run: psql "postgresql://postgres@127.0.0.1:5432/postgres" -v ON_ERROR_STOP=1 -f crates/app/migrations/202604240001_create_todos.sql
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli --no-default-features --features rustls,postgres --locked
+      - name: Run database migrations
+        run: bash scripts/migrate.sh
       - name: Check formatting
         run: cargo fmt --all -- --check
       - name: Run clippy
