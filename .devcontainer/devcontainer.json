@@ -35,11 +35,11 @@
         "rust-analyzer.checkOnSave.enable": true,
         "rust-analyzer.cargo.features": "all",
         "rust-analyzer.check.command": "clippy",
-          "rust-analyzer.cargo.targetDir": "/home/vscode/.cache/axum-template/target",
-          "rust-analyzer.cargo.extraEnv": {
-            "SQLX_OFFLINE": "true",
-            "DATABASE_URL": "postgres://postgres:postgres@127.0.0.1:5432/app"
-          }
+        "rust-analyzer.cargo.targetDir": "/home/vscode/.cache/axum-template/target",
+        "rust-analyzer.cargo.extraEnv": {
+          "SQLX_OFFLINE": "true",
+          "DATABASE_URL": "postgres://postgres:postgres@postgres:5432/app"
+        }
       }
     }
   },

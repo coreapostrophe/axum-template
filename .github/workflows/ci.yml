@@ -62,8 +62,6 @@ jobs:
         uses: swatinem/rust-cache@v2
       - name: Install sqlx-cli
         run: cargo install sqlx-cli --version ${SQLX_CLI_VERSION} --no-default-features --features rustls,postgres --locked
-      - name: Run database migrations
-        run: bash scripts/migrate.sh
       - name: Verify SQLx offline metadata
         if: matrix.rust == 'stable'
         run: bash scripts/prepare_sqlx.sh --check

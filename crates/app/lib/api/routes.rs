@@ -75,6 +75,25 @@ fn cors_layer() -> CorsLayer {
         })
         .collect::<Vec<_>>();
 
+    let header_values = if header_values.is_empty() {
+        warn!(
+            "no valid CORS origins were configured; falling back to default local development origins"
+        );
+
+        DEFAULT_ALLOWED_ORIGINS
+            .iter()
+            .filter_map(|origin| match HeaderValue::from_str(origin) {
+                Ok(value) => Some(value),
+                Err(_) => {
+                    warn!(origin = %origin, "ignoring invalid default cors origin");
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+    } else {
+        header_values
+    };
+
     if !header_values.is_empty() {
         cors_layer = cors_layer.allow_origin(AllowOrigin::list(header_values));
     }

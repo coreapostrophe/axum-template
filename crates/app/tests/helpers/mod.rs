@@ -129,9 +129,10 @@ impl TestDatabase {
 impl Drop for TestDatabase {
     fn drop(&mut self) {
         let db_name = self.db_name.clone();
+        let db_name_for_log = db_name.clone();
         let maintenance_connection_string = self.maintenance_connection_string.clone();
 
-        let _ = std::thread::Builder::new()
+        let cleanup_result = std::thread::Builder::new()
             .name("test-db-cleanup".to_owned())
             .spawn(move || {
                 let runtime = tokio::runtime::Builder::new_current_thread()
@@ -148,6 +149,10 @@ impl Drop for TestDatabase {
                     .join()
                     .map_err(|_| std::io::Error::other("test database cleanup panicked"))
             });
+
+        if let Err(error) = cleanup_result {
+            eprintln!("warning: failed to clean up test database {db_name_for_log}: {error}");
+        }
     }
 }
 
