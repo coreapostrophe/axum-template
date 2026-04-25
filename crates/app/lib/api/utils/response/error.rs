@@ -5,6 +5,8 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+#[cfg(feature = "openapi")]
+use utoipa::ToSchema;
 
 use crate::error::AppError;
 
@@ -21,6 +23,7 @@ pub enum ApiError {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ApiErrorResponse {
     pub status: String,

@@ -12,6 +12,15 @@ path = "lib/mod.rs"
 name = "axum_app"
 path = "src/main.rs"
 
+[[bin]]
+name = "openapi"
+path = "src/openapi.rs"
+required-features = ["openapi"]
+
+[features]
+default = []
+openapi = ["dep:utoipa", "dep:serde_json"]
+
 [dependencies]
 axum = "0.8.9"
 tokio = { version = "1.52.1", features = ["macros", "rt-multi-thread"] }
@@ -36,6 +45,8 @@ sqlx = { version = "0.8.6", default-features = false, features = [
 uuid = { version = "1.18", features = ["serde", "v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 tower-http = { version = "0.6", features = ["trace", "cors"] }
+utoipa = { version = "5", optional = true, features = ["axum_extras", "chrono", "uuid"] }
+serde_json = { version = "1.0", optional = true }
 
 [dev-dependencies]
 reqwest = { version = "0.13.2", default-features = false, features = [

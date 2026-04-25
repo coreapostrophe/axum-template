@@ -1,4 +1,9 @@
-use axum_applib::{config::ServerConfig, error::AppResult, observability, server::Server};
+use axum_applib::{
+    config::ServerConfig,
+    error::{AppError, AppErrorKind, AppResult},
+    observability,
+    server::Server,
+};
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
@@ -30,10 +35,7 @@ async fn main() -> AppResult<()> {
 
     if config.postgres.run_migrations {
         if let Err(error) = sqlx::migrate!("./migrations").run(&pg_pool).await {
-            let app_error = axum_applib::error::AppError::from_source(
-                axum_applib::error::AppErrorKind::Migration,
-                error,
-            );
+            let app_error = AppError::from_source(AppErrorKind::Migration, error);
             app_error.log_debug();
             return Err(app_error);
         }

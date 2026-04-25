@@ -166,6 +166,16 @@ Error envelope:
 }
 ```
 
+## OpenAPI Specification
+
+Generate an OpenAPI JSON file from code annotations:
+
+```bash
+cargo run -p axum_app --features openapi --bin openapi -- openapi/openapi.json
+```
+
+If no output path is provided, the generator writes to `openapi.json` in the current working directory.
+
 ## Database and Migrations
 
 Migration files live in:

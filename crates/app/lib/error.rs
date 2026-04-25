@@ -1,7 +1,7 @@
-use std::{fmt, panic::Location};
+use std::{error::Error as StdError, fmt, panic::Location};
 
 pub type AppResult<T> = Result<T, AppError>;
-type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
+type BoxError = Box<dyn StdError + Send + Sync + 'static>;
 
 pub trait ResultExt<T> {
     fn app_err(self, kind: AppErrorKind) -> AppResult<T>;
@@ -9,7 +9,7 @@ pub trait ResultExt<T> {
 
 impl<T, E> ResultExt<T> for Result<T, E>
 where
-    E: std::error::Error + Send + Sync + 'static,
+    E: StdError + Send + Sync + 'static,
 {
     #[track_caller]
     fn app_err(self, kind: AppErrorKind) -> AppResult<T> {
@@ -53,7 +53,7 @@ impl AppError {
     #[track_caller]
     pub fn from_source<E>(kind: AppErrorKind, source: E) -> Self
     where
-        E: std::error::Error + Send + Sync + 'static,
+        E: StdError + Send + Sync + 'static,
     {
         Self {
             kind,
@@ -86,10 +86,10 @@ impl AppError {
         self.location.column()
     }
 
-    pub fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+    pub fn source(&self) -> Option<&(dyn StdError + 'static)> {
         self.source
             .as_deref()
-            .map(|source| source as &(dyn std::error::Error + 'static))
+            .map(|source| source as &(dyn StdError + 'static))
     }
 }
 
@@ -99,8 +99,8 @@ impl fmt::Display for AppError {
     }
 }
 
-impl std::error::Error for AppError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+impl StdError for AppError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
         self.source()
     }
 }

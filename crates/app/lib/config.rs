@@ -1,4 +1,4 @@
-use std::{env, path::Path};
+use std::{env, path::Path, time::Duration};
 
 use config::{Config as ConfigBuilder, Environment, File};
 use serde::Deserialize;
@@ -68,7 +68,7 @@ impl PostgresConfig {
     pub fn pg_pool(&self) -> AppResult<PgPool> {
         PgPoolOptions::new()
             .max_connections(self.max_connections)
-            .acquire_timeout(std::time::Duration::from_secs(self.acquire_timeout_seconds))
+            .acquire_timeout(Duration::from_secs(self.acquire_timeout_seconds))
             .connect_lazy(&self.connection_string())
             .app_err(AppErrorKind::DbPool)
     }

@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{env, io, thread, time::Duration};
 
 use axum_applib::server::Server;
 use serde::Serialize;
@@ -31,12 +31,11 @@ struct TestDatabaseConfig {
 impl TestDatabaseConfig {
     fn from_env() -> Self {
         Self {
-            host: std::env::var("APP_POSTGRES__HOST").unwrap_or_else(|_| "127.0.0.1".to_owned()),
-            port: std::env::var("APP_POSTGRES__PORT").unwrap_or_else(|_| "5432".to_owned()),
-            user: std::env::var("APP_POSTGRES__USER").unwrap_or_else(|_| "postgres".to_owned()),
-            password: std::env::var("APP_POSTGRES__PASSWORD")
-                .unwrap_or_else(|_| "postgres".to_owned()),
-            maintenance_db_name: std::env::var("APP_POSTGRES__MAINTENANCE_DB")
+            host: env::var("APP_POSTGRES__HOST").unwrap_or_else(|_| "127.0.0.1".to_owned()),
+            port: env::var("APP_POSTGRES__PORT").unwrap_or_else(|_| "5432".to_owned()),
+            user: env::var("APP_POSTGRES__USER").unwrap_or_else(|_| "postgres".to_owned()),
+            password: env::var("APP_POSTGRES__PASSWORD").unwrap_or_else(|_| "postgres".to_owned()),
+            maintenance_db_name: env::var("APP_POSTGRES__MAINTENANCE_DB")
                 .unwrap_or_else(|_| "postgres".to_owned()),
         }
     }
@@ -132,7 +131,7 @@ impl Drop for TestDatabase {
         let db_name_for_log = db_name.clone();
         let maintenance_connection_string = self.maintenance_connection_string.clone();
 
-        let cleanup_result = std::thread::Builder::new()
+        let cleanup_result = thread::Builder::new()
             .name("test-db-cleanup".to_owned())
             .spawn(move || {
                 let runtime = tokio::runtime::Builder::new_current_thread()
@@ -147,7 +146,7 @@ impl Drop for TestDatabase {
             .and_then(|join_handle| {
                 join_handle
                     .join()
-                    .map_err(|_| std::io::Error::other("test database cleanup panicked"))
+                    .map_err(|_| io::Error::other("test database cleanup panicked"))
             });
 
         if let Err(error) = cleanup_result {

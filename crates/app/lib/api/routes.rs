@@ -1,3 +1,5 @@
+use std::env;
+
 use axum::{
     http::{header, HeaderValue, Method, StatusCode},
     routing::get,
@@ -10,22 +12,33 @@ use tower_http::{
     trace::TraceLayer,
 };
 use tracing::warn;
+#[cfg(feature = "openapi")]
+use utoipa::ToSchema;
 
 use super::domains::{self, services::ServiceCollection};
 
 #[derive(Serialize)]
-struct HealthResponse {
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub(crate) struct HealthResponse {
     status: &'static str,
 }
 
-async fn health_check() -> (StatusCode, Json<HealthResponse>) {
+#[cfg_attr(feature = "openapi", utoipa::path(
+    get,
+    path = "/health",
+    responses(
+        (status = 200, description = "Service health status", body = HealthResponse)
+    ),
+    tag = "health"
+))]
+pub(crate) async fn health_check() -> (StatusCode, Json<HealthResponse>) {
     (StatusCode::OK, Json(HealthResponse { status: "healthy" }))
 }
 
 const DEFAULT_ALLOWED_ORIGINS: [&str; 2] = ["http://localhost:3000", "http://127.0.0.1:3000"];
 
 fn cors_allowed_origins() -> Vec<String> {
-    let configured = std::env::var("APP_API__CORS_ALLOWED_ORIGINS")
+    let configured = env::var("APP_API__CORS_ALLOWED_ORIGINS")
         .ok()
         .map(|value| {
             value
